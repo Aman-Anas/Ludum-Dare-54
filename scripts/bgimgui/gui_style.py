@@ -21,7 +21,7 @@ def getDirection(direction: str):
             return imgui.DIRECTION_NONE
 
 
-def styleGUI(self, styleConfigPath: str):
+def styleGUI(styleConfigPath: str):
 
     with open(styleConfigPath, "rb") as styleFile:
         data = tomli.load(styleFile)
