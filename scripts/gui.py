@@ -10,13 +10,16 @@ from bge.types import KX_Scene
 import orjson
 
 DEFAULT_KEY_MAP = {
-    "move_forward": "WKEY",
-    "move_backward": "SKEY",
-    "move_right": "DKEY",
-    "move_left": "AKEY",
-    "sprint": "LEFTSHIFTKEY",
-    "toggle_alt_mode": "LEFTALTKEY",
-    "jump": "SPACEKEY"
+    "roll_right": "DKEY",
+    "roll_left": "AKEY",
+    "throttle_up": "WKEY",
+    "throttle_down": "SKEY",
+    "shoot": "LEFTMOUSE"
+}
+
+DEFAULT_CONFIG = {
+    "DIRECTION": False,
+    "MOUSE_SENSITIVITY": 1.0
 }
 
 
@@ -24,39 +27,54 @@ def getAssetDir():
     return bge.logic.expandPath("//assets/\\")
 
 
-keymapFile = f"{getAssetDir()}key_map.gwcfg"
+configFileStr = f"{getAssetDir()}config.json"
 
 
-def loadKeyMap():
-    if os.path.isfile(keymapFile):
-        with open(keymapFile, 'rb') as openfile:
-            keyMapValues = orjson.loads(openfile.read())
+def loadConfig():
+    if os.path.isfile(configFileStr):
+        with open(configFileStr, 'rb') as openfile:
+            data = orjson.loads(openfile.read())
 
     # If no key map config file exists, make a default one
     else:
-        keyMapValues = DEFAULT_KEY_MAP
+        data = {}
+        data["key_map"] = DEFAULT_KEY_MAP
+        data["config"] = DEFAULT_CONFIG
 
         jsonData = orjson.dumps(
-            keyMapValues, option=orjson.OPT_INDENT_2)
-        with open(keymapFile, 'wb') as outfile:
+            data, option=orjson.OPT_INDENT_2)
+        with open(configFileStr, 'wb') as outfile:
             outfile.write(jsonData)
 
     bge.logic.globalDict["key_map"] = {}
+    bge.logic.globalDict["config"] = {}
+
+    keyMapValues = data["key_map"]
+    print(keyMapValues)
     for strKey in keyMapValues:
         bge.logic.globalDict["key_map"][strKey] = getattr(
             bge.events, keyMapValues[strKey])
 
+    configValues = data["config"]
+    bge.logic.globalDict["config"] = configValues
 
-def saveKeyMap():
+
+def saveConfig():
     keyMap = bge.logic.globalDict["key_map"]
+    config = bge.logic.globalDict["config"]
+
     keyMapValues = {}
     for key in keyMap:
         stringName = bge.events.EventToString(keyMap[key])
         keyMapValues[key] = stringName
 
+    data = {}
+    data["key_map"] = keyMapValues
+    data["config"] = config
+
     jsonData = orjson.dumps(
-        keyMapValues, option=orjson.OPT_INDENT_2)
-    with open(keymapFile, 'wb') as outfile:
+        data, option=orjson.OPT_INDENT_2)
+    with open(configFileStr, 'wb') as outfile:
         outfile.write(jsonData)
 
 
@@ -83,7 +101,7 @@ class MainGameGUI(BGEImguiWrapper):
         styleConfigPath = f"{getAssetDir()}ui_style.toml"
         styleGUI(styleConfigPath)
 
-        loadKeyMap()
+        loadConfig()
 
         backend = self.imgui_backend
 
@@ -115,14 +133,19 @@ class MainGameGUI(BGEImguiWrapper):
 
         self.pauseWindow = windows.PauseWindow(io, self)
 
+        self.startWindow = windows.StartPanel(io, self)
+
+        self.helpWindow = windows.HelpWindow(io)
+
         self.setupMainGUIWindows(io)
 
     def setupMainGUIWindows(self, io):
-        pass
+        self.throttle = windows.ThrottleWindow(io, self)
 
     def drawMainGUI(self):
         self.pauseWindow.drawWindow()
         self.settingsWindow.drawWindow()
+        self.throttle.drawWindow()
 
     def updateSceneName(self, name: str):
         self.activeSceneName = name
@@ -131,15 +154,24 @@ class MainGameGUI(BGEImguiWrapper):
         sceneStr = self.activeSceneName
         scene: KX_Scene = bge.logic.getSceneList()[sceneStr]
 
+        inGame = self.mode is GUIModes.MAIN_GAME
+
         if not self.pause:
             scene.suspend()
             self.pauseWindow.setVisible(True)
             self.pause = True
+
+            if inGame:
+                self.showCursor = True
+
         else:
             scene.resume()
             self.pauseWindow.setVisible(False)
             self.settingsWindow.setVisible(False)
             self.pause = False
+
+            if inGame:
+                self.showCursor = False
 
     def drawGUI(self):
         backend = self.imgui_backend
@@ -167,10 +199,13 @@ class MainGameGUI(BGEImguiWrapper):
             case GUIModes.TITLE_SCREEN:
                 self.pauseWindow.drawWindow()
                 self.settingsWindow.drawWindow()
+                self.startWindow.drawWindow()
+                self.helpWindow.drawWindow()
+
             case GUIModes.MAIN_GAME:
                 self.drawMainGUI()
             case _:
                 pass
 
     def saveKeys(self):
-        saveKeyMap()
+        saveConfig()

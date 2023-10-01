@@ -1,0 +1,12 @@
+{
+  "key_map": {
+    "roll_right": "DKEY",
+    "roll_left": "AKEY",
+    "throttle_up": "WKEY",
+    "throttle_down": "SKEY"
+  },
+  "config": {
+    "DIRECTION": false,
+    "MOUSE_SENSITIVITY": 1.0
+  }
+}

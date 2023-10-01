@@ -6,6 +6,7 @@ import sys
 
 from .bgimgui import widgets
 
+
 import imgui
 import bge
 
@@ -127,15 +128,16 @@ class SettingsWindow(widgets.GUIWindow):
             return
 
         # Put all active inputs in one dictionary
-        allInputs = {**keyboard.activeInputs}  # , **mouse.activeInputs}
+        allInputs = {**keyboard.activeInputs, **mouse.activeInputs}
         keyMap = bge.logic.globalDict["key_map"]
 
-        imgui.text("Enter a key...")  # or mouse button...")
+        imgui.text("Enter a key or mouse button...")
 
         if len(allInputs) > 0:
             activeInput = list(allInputs)[0]
-            keyMap[self.controlValue] = activeInput
-            self.controlCaptureMode = False
+            if (activeInput != bge.events.MOUSEX) and (activeInput != bge.events.MOUSEY):
+                keyMap[self.controlValue] = activeInput
+                self.controlCaptureMode = False
 
     def drawControlSettings(self):
         imgui.text("Set keys")
@@ -161,6 +163,12 @@ class SettingsWindow(widgets.GUIWindow):
 
             imgui.text(
                 f"Current: {stringName}")
+
+        _, bge.logic.globalDict["config"]["DIRECTION"] = imgui.checkbox(
+            "Invert pitch axis", bge.logic.globalDict["config"]["DIRECTION"])
+
+        _, bge.logic.globalDict["config"]["MOUSE_SENSITIVITY"] = imgui.slider_float(
+            "Mouse sensitivity", bge.logic.globalDict["config"]["MOUSE_SENSITIVITY"], 0.0, 3.0)
 
         if imgui.button("Save settings", -1):
             self.gui.saveKeys()
@@ -194,7 +202,87 @@ class PauseWindow(widgets.GUIWindow):
         if settings:
             self.gui.settingsWindow.setVisible(True)
 
+        title = imgui.button("Return to Title", -1)
+        if title:
+            bge.logic.restartGame()
+
         exitGame = imgui.button("Exit Game", -1)
 
         if exitGame:
             bge.logic.endGame()
+
+
+class StartPanel(widgets.GUIWindow):
+    def __init__(self, io: imgui._IO, gui: MainGameGUI, flags=0) -> None:
+        flags |= imgui.WINDOW_NO_COLLAPSE
+        flags |= imgui.WINDOW_NO_TITLE_BAR
+        flags |= imgui.WINDOW_NO_RESIZE
+        flags |= imgui.WINDOW_NO_MOVE
+        flags |= imgui.WINDOW_NO_BACKGROUND
+
+        super().__init__("StartPanel", io, False, flags)
+        self.setVisible(True)
+        self.gui = gui
+
+    def drawWindow(self):
+        display_size = self.io.display_size
+        imgui.set_next_window_size(display_size.x * 0.25, display_size.y * 0.6)
+        imgui.set_next_window_position(
+            display_size.x * 0.5, display_size.y * 0.7, pivot_x=0.5, pivot_y=0.5)
+        super().drawWindow()
+
+    def drawContents(self):
+
+        if imgui.button("Start", -1):
+            scene = bge.logic.getSceneList()["title"]
+            scene.replace("game")
+            self.gui.updateSceneName("game")
+            self.gui.mode = GUIModes.MAIN_GAME
+            self.gui.showCursor = False
+
+        if imgui.button("Help", -1):
+            self.gui.helpWindow.setVisible(True)
+
+        if imgui.button("Settings", -1):
+            if not self.gui.pause:
+                self.gui.togglePause()
+            self.gui.settingsWindow.setVisible(True)
+
+        if imgui.button("Exit", -1):
+            bge.logic.endGame()
+
+
+class HelpWindow(widgets.GUIWindow):
+    def __init__(self, io: imgui._IO, flags=None) -> None:
+        super().__init__("Help Window", io, True, flags)
+        self.setVisible(False)
+
+    def drawContents(self):
+        imgui.text("Help text goes here!")
+
+
+class ThrottleWindow(widgets.GUIWindow):
+    def __init__(self, io: imgui._IO, gui: MainGameGUI, flags=0) -> None:
+        flags |= imgui.WINDOW_NO_COLLAPSE
+        flags |= imgui.WINDOW_NO_TITLE_BAR
+        flags |= imgui.WINDOW_NO_RESIZE
+        flags |= imgui.WINDOW_NO_MOVE
+        flags |= imgui.WINDOW_NO_BACKGROUND
+        flags |= imgui.WINDOW_ALWAYS_AUTO_RESIZE
+
+        super().__init__("Throttle", io, False, flags)
+        self.setVisible(True)
+        self.gui = gui
+
+    def drawWindow(self):
+        display_size = self.io.display_size
+        # imgui.set_next_window_size(
+        #     display_size.x * 0.15, display_size.y * 0.10)
+        imgui.set_next_window_position(
+            display_size.x * 1.0, display_size.y * 1.0, pivot_x=1.0, pivot_y=1.0)
+        super().drawWindow()
+
+    def drawContents(self):
+        mainScene = bge.logic.getSceneList()["game"]
+        ship = mainScene.objects["ship"]
+        imgui.progress_bar(ship["throttle"] / 100.0, (100, 20), "Throttle")
