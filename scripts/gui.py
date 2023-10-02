@@ -144,6 +144,7 @@ class MainGameGUI(BGEImguiWrapper):
     def setupMainGUIWindows(self, io):
         self.throttle = windows.ThrottleWindow(io, self)
         self.health = windows.HealthBar(io, self)
+        self.timer = windows.TimerWindow(io, self)
 
     def drawMainGUI(self):
         self.pauseWindow.drawWindow()
@@ -151,6 +152,7 @@ class MainGameGUI(BGEImguiWrapper):
         self.throttle.drawWindow()
         self.health.drawWindow()
         self.helpWindow.drawWindow()
+        self.timer.drawWindow()
 
     def updateSceneName(self, name: str):
         self.activeSceneName = name
