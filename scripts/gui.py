@@ -107,8 +107,8 @@ class MainGameGUI(BGEImguiWrapper):
 
         backend = self.imgui_backend
 
-        font_global_scaling_factor = 1  # Set to 2 for high res displays?
-        backend.setScalingFactors(font_global_scaling_factor)
+        font_global_scaling_factor = 2  # Set to 2 for high res displays?
+        backend.setScalingFactors(font_global_scaling_factor, 1.4)
 
         mainFontPath = bge.logic.expandPath("//assets/fonts/main.ttf")
         mainFont = backend.setMainFont(mainFontPath, 11)
@@ -143,11 +143,14 @@ class MainGameGUI(BGEImguiWrapper):
 
     def setupMainGUIWindows(self, io):
         self.throttle = windows.ThrottleWindow(io, self)
+        self.health = windows.HealthBar(io, self)
 
     def drawMainGUI(self):
         self.pauseWindow.drawWindow()
         self.settingsWindow.drawWindow()
         self.throttle.drawWindow()
+        self.health.drawWindow()
+        self.helpWindow.drawWindow()
 
     def updateSceneName(self, name: str):
         self.activeSceneName = name

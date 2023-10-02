@@ -100,3 +100,18 @@ def shoot(cont: SCA_PythonController):
             obj.worldPosition = own.worldPosition
             obj.worldOrientation = own.worldOrientation
             obj.localLinearVelocity.y = 200
+
+
+def hurt(cont: SCA_PythonController):
+    if cont.sensors["hurt"].positive or cont.sensors["lava"].positive:
+        own = cont.owner
+        own["health"] -= 5
+        if cont.sensors["lava"].positive:
+            own["health"] -= 6
+
+        overlay = bge.logic.getSceneList()["overlay"]
+        plane = overlay.objects["HurtPlane"]
+        plane["hurt"] = True
+
+        if own["health"] <= 0:
+            bge.logic.levelManager.respawn()

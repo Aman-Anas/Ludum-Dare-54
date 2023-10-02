@@ -1,5 +1,5 @@
 import bge
-from bge.types import KX_GameObject, KX_Scene
+from bge.types import KX_GameObject, KX_Scene, KX_FontObject, SCA_PythonController
 from mathutils import Vector
 
 PERSIST_STR = "persist"
@@ -49,6 +49,7 @@ class LevelManager:
         ship.worldPosition = spawnPoint.worldPosition
         ship.worldOrientation = spawnPoint.worldOrientation
         ship["throttle"] = 0.0
+        ship["health"] = 100.0
 
         # Spawn in level objects/entities
         for obj in newOrigin.childrenRecursive:
@@ -62,8 +63,21 @@ class LevelManager:
 
         self.gameScene.resume()
 
+        overlay = bge.logic.getSceneList()["overlay"]
+        text: KX_FontObject = overlay.objects["LevelText"]
+        text["OriginalText"] = f"Level {self.currentLevel}"
+        text["ResetReveal"] = True
+        text["disappear"] = 0.0
+        text.setVisible(True)
+
     def respawn(self):
         self.loadLevel(self.currentLevel)
 
     def loadNextLevel(self):
         self.loadLevel(self.currentLevel + 1)
+
+
+def levelTextDisappear(cont: SCA_PythonController):
+    own = cont.owner
+    if own["disappear"] > 3.0:
+        own.setVisible(False)

@@ -198,6 +198,13 @@ class PauseWindow(widgets.GUIWindow):
     def drawContents(self):
         display_size = self.io.display_size
         imgui.dummy(display_size.x * 0.4, 0)
+        imgui.push_style_color(imgui.COLOR_BUTTON, 1.0, 0.0, 0.3529)
+        helpMenu = imgui.button("Help!", -1)
+        imgui.pop_style_color(1)
+
+        if helpMenu:
+            self.gui.helpWindow.setVisible(True)
+
         settings = imgui.button("Open Settings", -1)
 
         if settings:
@@ -260,6 +267,12 @@ class HelpWindow(widgets.GUIWindow):
 
     def drawContents(self):
         imgui.text("Help text goes here!")
+        imgui.separator()
+        imgui.text("Current controls:")
+        keymap = bge.logic.globalDict["key_map"]
+        for key in keymap:
+            keyName = bge.events.EventToString(keymap[key])
+            imgui.text(f"{key} : {keyName}")
 
 
 class ThrottleWindow(widgets.GUIWindow):
@@ -284,6 +297,36 @@ class ThrottleWindow(widgets.GUIWindow):
         super().drawWindow()
 
     def drawContents(self):
+        imgui.text("esc to view help")
+
+
+class HealthBar(widgets.GUIWindow):
+    def __init__(self, io: imgui._IO, gui: MainGameGUI, flags=0) -> None:
+        flags |= imgui.WINDOW_NO_COLLAPSE
+        flags |= imgui.WINDOW_NO_TITLE_BAR
+        flags |= imgui.WINDOW_NO_RESIZE
+        flags |= imgui.WINDOW_NO_MOVE
+        flags |= imgui.WINDOW_NO_BACKGROUND
+        flags |= imgui.WINDOW_ALWAYS_AUTO_RESIZE
+
+        super().__init__("Health", io, False, flags)
+        self.setVisible(True)
+        self.gui = gui
+
+    def drawWindow(self):
+        display_size = self.io.display_size
+        # imgui.set_next_window_size(
+        #     display_size.x * 0.15, display_size.y * 0.10)
+        imgui.set_next_window_position(
+            display_size.x * 1.0, display_size.y * 0.0, pivot_x=1.0, pivot_y=0.0)
+        super().drawWindow()
+
+    def drawContents(self):
         mainScene = bge.logic.getSceneList()["game"]
         ship = mainScene.objects["ship"]
-        imgui.progress_bar(ship["throttle"] / 100.0, (100, 20), "Throttle")
+        imgui.push_style_color(imgui.COLOR_PLOT_HISTOGRAM, 1.0, 0.0, 0.3529)
+        imgui.progress_bar(ship["health"] / 100.0, (200, 20), "Health")
+        imgui.pop_style_color(1)
+        # mainScene = bge.logic.getSceneList()["game"]
+        # ship = mainScene.objects["ship"]
+        imgui.progress_bar(ship["throttle"] / 100.0, (200, 40), "Throttle")
