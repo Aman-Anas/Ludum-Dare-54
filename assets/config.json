@@ -3,7 +3,8 @@
     "roll_right": "DKEY",
     "roll_left": "AKEY",
     "throttle_up": "WKEY",
-    "throttle_down": "SKEY"
+    "throttle_down": "SKEY",
+    "shoot": "LEFTMOUSE"
   },
   "config": {
     "DIRECTION": false,

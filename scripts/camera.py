@@ -24,13 +24,14 @@ def followShip(cont: SCA_PythonController):
 def collide(cont: SCA_PythonController):
     if cont.sensors["loop"].positive:
         own = cont.owner
-        target = own.parent
+        parent = own.parent
+        target = own.scene.objects["cameraTarget"]
+        ship: KX_GameObject = own.scene.objects["ship"]
         camPos: KX_GameObject = own.scene.objects["cameraPosition"]
 
-        cast = camPos.rayCast(target, dist=camPos.getDistanceTo(target))
+        cast = ship.rayCast(camPos, dist=(camPos.getDistanceTo(target)))
         if cast[0]:
-            if cast[0].name == "ship":
-                own.worldPosition = camPos.worldPosition
-            else:
-                hitPoint = cast[1]
-                own.worldPosition = hitPoint
+            hitPoint = cast[1]
+            parent.worldPosition = hitPoint
+        else:
+            parent.worldPosition = camPos.worldPosition

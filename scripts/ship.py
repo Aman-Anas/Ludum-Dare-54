@@ -6,9 +6,9 @@ ROTATE_FAC = 0.1
 ORIENT_MOVE_FACTOR = 90.0
 ROLL_FACTOR = 2.0
 THROTTLE_RAMP = 1.0
-THROTTLE_FAC = 3.2
+THROTTLE_FAC = 2.2
 MAX_ROT_VELO = 6.2
-MAX_MOVEMENT_SPEED = 60.0
+MAX_MOVEMENT_SPEED = 40.0
 SLOW_DOWN_SPEED = 2.0
 
 mouse = bge.logic.mouse
@@ -17,6 +17,7 @@ keyboard = bge.logic.keyboard
 
 def movement(cont: SCA_PythonController):
     if cont.sensors["loop"].positive:
+
         own = cont.owner
         target = own.scene.objects["lookTarget"]
         model = own.children["model"]
@@ -48,7 +49,7 @@ def movement(cont: SCA_PythonController):
         right = False
         left = False
 
-        activeInputs = keyboard.activeInputs
+        activeInputs = {**keyboard.activeInputs, **mouse.activeInputs}
         if keyMap["roll_left"] in activeInputs:
             own.localAngularVelocity.y -= ROLL_FACTOR
             left = True
@@ -69,7 +70,10 @@ def movement(cont: SCA_PythonController):
 
         own["throttle"] = min(100, max(0, own["throttle"]))
 
-        own.applyForce([0, own["throttle"] * THROTTLE_FAC, 0], True)
+        nose = cont.sensors["nose"]
+
+        if not nose.positive:
+            own.applyForce([0, own["throttle"] * THROTTLE_FAC, 0], True)
 
         if own.localLinearVelocity.y > 0:
             own.applyForce(
@@ -81,3 +85,18 @@ def movement(cont: SCA_PythonController):
         own.localLinearVelocity.x = 0
         own.localLinearVelocity.z = 0
         model["frame"] = own["throttle"]
+
+
+def shoot(cont: SCA_PythonController):
+    if cont.sensors["loop"].positive:
+
+        own = cont.owner
+        keyMap = bge.logic.globalDict["key_map"]
+        activeInputs = {**keyboard.activeInputs, **mouse.activeInputs}
+
+        if (keyMap["shoot"] in activeInputs) and (own["cool"] > 0.1):
+            obj = own.scene.addObject("GoodLaser", own, 0.0)
+            own["cool"] = 0
+            obj.worldPosition = own.worldPosition
+            obj.worldOrientation = own.worldOrientation
+            obj.localLinearVelocity.y = 200

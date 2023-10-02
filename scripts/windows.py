@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import sys
 
 from .bgimgui import widgets
-
+from .levels import LevelManager
 
 import imgui
 import bge
@@ -91,7 +91,7 @@ class SettingsWindow(widgets.GUIWindow):
         _, self.maxLogicFrame = imgui.input_int(
             "##maxLogicFrames", self.maxLogicFrame)
 
-        imgui.text("Logic Tick Rate (FPS)")
+        imgui.text("Logic Tick Rate (FPS) [BUGGY, use 60fps]")
         _, self.logicTickRate = imgui.input_float(
             "##logicTickRate", self.logicTickRate)
 
@@ -110,6 +110,7 @@ class SettingsWindow(widgets.GUIWindow):
         if apply:
             bge.logic.setMaxLogicFrame(self.maxLogicFrame)
             bge.logic.setLogicTicRate(self.logicTickRate)
+            bge.logic.setPhysicsTicRate(self.logicTickRate)
             bge.render.setFullScreen(self.fullscreen)
             bge.render.setWindowSize(*self.resolution)
 

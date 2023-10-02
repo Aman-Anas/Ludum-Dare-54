@@ -50,7 +50,7 @@ def loadConfig():
     bge.logic.globalDict["config"] = {}
 
     keyMapValues = data["key_map"]
-    print(keyMapValues)
+
     for strKey in keyMapValues:
         bge.logic.globalDict["key_map"][strKey] = getattr(
             bge.events, keyMapValues[strKey])
@@ -85,8 +85,10 @@ class MainGameGUI(BGEImguiWrapper):
 
         self.pause = False
         cursorPath = f"{getAssetDir()}/cursors"
+        bge.logic.levelManager = None
 
         self.mode = GUIModes.TITLE_SCREEN
+
         super().__init__(scene, cursorPath)
 
     def initializeGUI(self):

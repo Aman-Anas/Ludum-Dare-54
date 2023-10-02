@@ -1,6 +1,7 @@
 import bge
 from bge.types import SCA_PythonController
 from .gui import MainGameGUI
+from .levels import LevelManager
 
 
 def initGame(cont: SCA_PythonController):
@@ -22,6 +23,19 @@ def runGUI(cont: SCA_PythonController):
 
         gui: MainGameGUI = bge.logic.gui
         gui.updateOnGameFrame()
+
+
+def initLevelManager(cont: SCA_PythonController):
+    if cont.sensors["tap"].positive:
+        own = cont.owner
+        own["levelManager"] = LevelManager(own.scene)
+
+
+def nextLevel(cont: SCA_PythonController):
+    if cont.sensors["next"].positive:
+        own = cont.owner
+        levelManager: LevelManager = bge.logic.levelManager
+        levelManager.loadNextLevel()
 
 
 def exitScreen(cont: SCA_PythonController):
