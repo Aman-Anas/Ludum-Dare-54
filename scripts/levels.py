@@ -8,17 +8,17 @@ PERSIST_STR = "persist"
 class LevelManager:
 
     def __init__(self, scene: KX_Scene):
-        self.currentLevel = 0
+        self.currentLevel = -1
         self.gameScene = scene
         self.moveObj = scene.objects["ship"]
         bge.logic.levelManager = self
-        self.loadLevel(self.currentLevel)
+        self.loadLevel(self.currentLevel + 1)
 
     def loadLevel(self, levelNumber: int):
         self.gameScene.suspend()
         previousLevel = self.currentLevel
 
-        if previousLevel != 0:
+        if previousLevel != -1:
             for entity in self.gameScene.objects:
                 if entity.parent is None:
                     if PERSIST_STR not in entity:
